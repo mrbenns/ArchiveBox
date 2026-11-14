@@ -197,10 +197,12 @@ rm -rf /venv/lib/python3.*/site-packages/pip* \
 rm -rf /var/lib/apt/lists/*
 EOF
 
-COPY --chown=root:root --chmod=755 "." "$CODE_DIR/"
+# Build from an ephemeral source mount; the installed wheel already contains
+# the package and static assets. Keeping /app/archivebox duplicates them.
 # Compile only ArchiveBox's installed package. Touching all of /venv here would
 # copy every inherited abx-dl file into a new layer merely to change its mtime.
-RUN echo "[*] Installing ArchiveBox Python source code from $CODE_DIR..." \
+RUN --mount=type=bind,source=.,target=/app,rw \
+    echo "[*] Installing ArchiveBox Python source code from $CODE_DIR..." \
     && COMMIT_HASH="$( \
         if [[ "$ARCHIVEBOX_COMMIT_HASH" =~ ^[0-9a-fA-F]{40}$ ]]; then \
             echo "$ARCHIVEBOX_COMMIT_HASH"; \
@@ -221,6 +223,8 @@ RUN echo "[*] Installing ArchiveBox Python source code from $CODE_DIR..." \
     && /venv/bin/python -m compileall --invalidation-mode checked-hash -q "$ARCHIVEBOX_PY_DIR" \
     && test -f "$(/venv/bin/python -c 'import archivebox; print(archivebox.__cached__)')" \
     && /usr/bin/uv pip show archivebox | tee -a /VERSION.txt
+
+COPY --chown=root:root --chmod=755 bin "$CODE_DIR/bin/"
 
 # The builder installs and purges stripping tools in one layer, so its final
 # filesystem is already runtime-clean. Preserve that ancestry: starting again
