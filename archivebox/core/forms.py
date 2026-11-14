@@ -360,6 +360,13 @@ class AddLinkForm(PluginConfigFormMixin, forms.Form):
             self.fields["persona"].initial = selected_persona.name
         self.fields["permissions"].initial = default_config.PERMISSIONS
         self.fields["timeout"].initial = default_config.TIMEOUT
+        for field, key in (
+            ("max_urls", "CRAWL_MAX_URLS"),
+            ("crawl_max_size", "CRAWL_MAX_SIZE"),
+            ("crawl_timeout", "CRAWL_TIMEOUT"),
+            ("snapshot_max_size", "SNAPSHOT_MAX_SIZE"),
+        ):
+            self.fields[field].initial = default_config[key]
         self.fields["crawl_max_concurrent_snapshots"].initial = default_config.CRAWL_MAX_CONCURRENT_SNAPSHOTS
         self.fields["delete_after"].initial = default_config.DELETE_AFTER
         self.fields["url_filters"].initial = {

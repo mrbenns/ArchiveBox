@@ -180,7 +180,7 @@
                             {% if form.max_urls.errors %}
                                 <div class="error">{{ form.max_urls.errors }}</div>
                             {% endif %}
-                            <div class="help-text">0 = unlimited. Whole numbers, e.g. 25, 300.</div>
+                            <div class="help-text">Maximum URLs in this crawl.</div>
                         </div>
 
                         <div class="crawl-limit-field">
@@ -192,7 +192,7 @@
                             {% if form.crawl_max_size.errors %}
                                 <div class="error">{{ form.crawl_max_size.errors }}</div>
                             {% endif %}
-                            <div class="help-text">0 = unlimited. Sizes: 45mb, 1.5gb, 2tb.</div>
+                            <div class="help-text">Combined size of files saved by this crawl.</div>
                         </div>
 
                         <div class="crawl-limit-field">
@@ -204,7 +204,7 @@
                             {% if form.crawl_timeout.errors %}
                                 <div class="error">{{ form.crawl_timeout.errors }}</div>
                             {% endif %}
-                            <div class="help-text">0 = unlimited. Must be >10s: 11, 1.5m, 1hr.</div>
+                            <div class="help-text">Time budget for this crawl.</div>
                         </div>
 
                         <div class="crawl-limit-field">
@@ -228,7 +228,7 @@
                             {% if form.snapshot_max_size.errors %}
                                 <div class="error">{{ form.snapshot_max_size.errors }}</div>
                             {% endif %}
-                            <div class="help-text">0 = unlimited. Sizes: 45mb, 1.5gb, 2tb.</div>
+                            <div class="help-text">Combined size of files saved by this crawl.</div>
                         </div>
 
                         <div class="crawl-limit-field">

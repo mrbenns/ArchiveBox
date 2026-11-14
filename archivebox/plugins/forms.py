@@ -487,7 +487,9 @@ class PluginConfigFormMixin:
             ]
         placeholder = str((prop_schema.get("examples") or [None])[0] or input_value or _jsonish(default_value))
         if plugin_choices and not input_value:
-            enabled = [item["value"] for item in plugin_choices if runtime_config.get(f"{item['value'].upper()}_ENABLED", True)]
+            groups = get_plugin_catalog().groups()
+            ordered = [plugin.name for category, _, _ in self.plugin_group_specs for plugin in groups.get(category, [])]
+            enabled = [name for name in ordered if runtime_config.get(f"{name.upper()}_ENABLED", True)]
             placeholder = ", ".join(enabled[:3])
 
         return {

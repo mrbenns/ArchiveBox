@@ -57,10 +57,10 @@ def add(
     urls: str | list[str],
     snapshot_ids: list[str] | None = None,
     depth: int | str = 0,
-    max_urls: int = 0,
-    crawl_max_size: int | str = 0,
-    crawl_timeout: int = 0,
-    snapshot_max_size: int | str = 0,
+    max_urls: int | None = None,
+    crawl_max_size: int | str | None = None,
+    crawl_timeout: int | None = None,
+    snapshot_max_size: int | str | None = None,
     crawl_max_concurrent_snapshots: int | None = None,
     tag: str = "",
     url_allowlist: str = "",
@@ -78,6 +78,12 @@ def add(
 
     from rich import print
 
+    supplied_limits = {
+        "CRAWL_MAX_URLS": max_urls,
+        "CRAWL_MAX_SIZE": crawl_max_size,
+        "CRAWL_TIMEOUT": crawl_timeout,
+        "SNAPSHOT_MAX_SIZE": snapshot_max_size,
+    }
     depth = int(depth)
     max_urls = int(max_urls or 0)
     crawl_max_size = parse_filesize_to_bytes(crawl_max_size)
@@ -163,10 +169,10 @@ def add(
             and crawl_max_concurrent_snapshots != int(effective_persona_config.CRAWL_MAX_CONCURRENT_SNAPSHOTS)
             else {}
         ),
-        **({"CRAWL_MAX_URLS": max_urls} if max_urls else {}),
-        **({"CRAWL_MAX_SIZE": crawl_max_size} if crawl_max_size else {}),
-        **({"CRAWL_TIMEOUT": crawl_timeout} if crawl_timeout else {}),
-        **({"SNAPSHOT_MAX_SIZE": snapshot_max_size} if snapshot_max_size else {}),
+        **({"CRAWL_MAX_URLS": max_urls} if supplied_limits["CRAWL_MAX_URLS"] is not None else {}),
+        **({"CRAWL_MAX_SIZE": crawl_max_size} if supplied_limits["CRAWL_MAX_SIZE"] is not None else {}),
+        **({"CRAWL_TIMEOUT": crawl_timeout} if supplied_limits["CRAWL_TIMEOUT"] is not None else {}),
+        **({"SNAPSHOT_MAX_SIZE": snapshot_max_size} if supplied_limits["SNAPSHOT_MAX_SIZE"] is not None else {}),
         **({"PARSER": parser} if parser != "auto" else {}),
         **({"URL_ALLOWLIST": url_allowlist} if url_allowlist else {}),
         **({"URL_DENYLIST": url_denylist} if url_denylist else {}),
@@ -353,10 +359,23 @@ def add(
     default="0",
     help="Recursively archive linked pages up to N hops away",
 )
-@click.option("--max-urls", type=int, default=0, help="Maximum number of URLs to snapshot for this crawl (0 = unlimited)")
-@click.option("--crawl-max-size", default="0", help="Maximum total crawl size in bytes or units like 45mb / 1gb (0 = unlimited)")
-@click.option("--crawl-timeout", type=int, default=0, help="Maximum total crawl runtime in seconds (0 = unlimited)")
-@click.option("--snapshot-max-size", default="0", help="Maximum per-snapshot size in bytes or units like 45mb / 1gb (0 = unlimited)")
+@click.option("--max-urls", type=int, default=None, help="Maximum URLs for this crawl; omitted uses configured defaults (0 = unlimited)")
+@click.option(
+    "--crawl-max-size",
+    default=None,
+    help="Maximum total crawl size in bytes or units like 45mb / 1gb; omitted uses configured defaults (0 = unlimited)",
+)
+@click.option(
+    "--crawl-timeout",
+    type=int,
+    default=None,
+    help="Maximum crawl runtime in seconds; omitted uses configured defaults (0 = unlimited)",
+)
+@click.option(
+    "--snapshot-max-size",
+    default=None,
+    help="Maximum snapshot size in bytes or units like 45mb / 1gb; omitted uses configured defaults (0 = unlimited)",
+)
 @click.option("--crawl-max-concurrent-snapshots", type=int, default=None, help="Maximum snapshots to archive concurrently within one crawl")
 @click.option("--folder-id", type=click.UUID, default=None, help="Folder for newly created snapshots")
 @click.option("--tag", "-t", default="", help="Comma-separated list of tags to add to each snapshot e.g. tag1,tag2,tag3")
@@ -399,11 +418,13 @@ def main(**kwargs):
         if int(kwargs.get("crawl_timeout") or 0) < 0:
             raise click.BadParameter("crawl_timeout must be 0 or a positive integer.", param_hint="--crawl-timeout")
         try:
-            kwargs["crawl_max_size"] = parse_filesize_to_bytes(kwargs.get("crawl_max_size"))
+            if kwargs.get("crawl_max_size") is not None:
+                kwargs["crawl_max_size"] = parse_filesize_to_bytes(kwargs["crawl_max_size"])
         except ValueError as err:
             raise click.BadParameter(str(err), param_hint="--crawl-max-size") from err
         try:
-            kwargs["snapshot_max_size"] = parse_filesize_to_bytes(kwargs.get("snapshot_max_size"))
+            if kwargs.get("snapshot_max_size") is not None:
+                kwargs["snapshot_max_size"] = parse_filesize_to_bytes(kwargs["snapshot_max_size"])
         except ValueError as err:
             raise click.BadParameter(str(err), param_hint="--snapshot-max-size") from err
         if kwargs.get("crawl_max_concurrent_snapshots") is not None and int(kwargs["crawl_max_concurrent_snapshots"]) < 0:

@@ -1,13 +1,9 @@
 <style>
 .config-concurrency { display: grid; gap: 10px; }
 .config-concurrency input { box-sizing: border-box; min-width: 0; }
-.config-concurrency-modes { display: flex; border-radius: 7px; padding: 3px; background: #e8e8ee; gap: 3px; }
-.config-concurrency-modes button { border: 0; border-radius: 5px; color: #555862; background: transparent; padding: 6px 10px; flex: 1; cursor: pointer; }
-.config-concurrency-modes button[aria-pressed="true"] { background: white; color: #222; box-shadow: 0 1px 3px #0002; }
 .config-concurrency-limit { display: flex; gap: 10px; align-items: center; }
 .config-concurrency-limit input[type="range"] { min-width: 60px; width: 100%; accent-color: #007aff; }
-.config-concurrency-limit input[type="number"] { width: 80px; flex: 0 0 80px; }
-.crawl-limit-field .config-concurrency-modes button { font-size: 12px; padding: 6px 4px; }
+.config-concurrency-limit input[type="number"] { width: 110px; flex: 0 0 110px; }
 .config-concurrency-status { font-size: 11px; color: #6e7078; }
 </style>
 <script>
@@ -17,18 +13,21 @@
         const input = widget.querySelector('.plugin-config-input');
         const slider = widget.querySelector('[data-concurrency-slider]');
         const status = widget.querySelector('.config-concurrency-status');
-        let lastFixed = Number(input.value) > 0 ? input.value : '1';
+        const amount = input.cloneNode(false);
+        amount.removeAttribute('name'); amount.removeAttribute('data-config-key');
+        amount.classList.remove('plugin-config-input'); amount.classList.add('config-concurrency-value');
+        amount.placeholder = 'Automatic'; amount.required = false;
+        input.id += '_canonical'; input.type = 'hidden'; input.after(amount);
         const update = () => {
-            const automatic = Number(input.value) === 0 && input.value !== '';
-            widget.querySelectorAll('[data-concurrency-mode]').forEach(button => button.setAttribute('aria-pressed', String((button.dataset.concurrencyMode === 'auto') === automatic)));
-            slider.disabled = automatic;
-            slider.max = Math.max(16, Number(input.value) || 1);
-            slider.value = Math.max(1, Number(input.value) || 1);
-            status.textContent = automatic ? 'Uses available resources' : input.value === '1' ? 'One snapshot at a time' : input.value ? `Up to ${input.value} snapshots at once` : '';
-            if (Number(input.value) > 0) lastFixed = input.value;
+            const automatic = Number(input.value) === 0;
+            amount.value = automatic ? '' : input.value;
+            slider.max = Math.max(10, Number(input.value) || 1);
+            slider.value = Number(input.value) || 0;
+            slider.setAttribute('aria-valuetext', automatic ? 'Automatic' : input.value);
+            status.textContent = automatic ? 'Uses available resources' : input.value === '1' ? 'One snapshot at a time' : `Up to ${input.value} snapshots at once`;
         };
         const setValue = value => { input.value = value; input.dispatchEvent(new Event('input', {bubbles: true})); input.dispatchEvent(new Event('change', {bubbles: true})); };
-        widget.querySelectorAll('[data-concurrency-mode]').forEach(button => button.addEventListener('click', () => setValue(button.dataset.concurrencyMode === 'auto' ? '0' : lastFixed)));
+        amount.addEventListener('input', () => { if (!amount.validity.badInput) setValue(amount.value || '0'); });
         slider.addEventListener('input', () => setValue(slider.value));
         input.addEventListener('input', update);
         input.addEventListener('change', update);

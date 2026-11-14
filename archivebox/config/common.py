@@ -509,15 +509,15 @@ class ArchivingConfig(BaseConfigSet):
     INDEX_ONLY: bool = Field(default=False, json_schema_extra={"x-advanced": True})
 
     TIMEOUT: int = Field(default=60)
-    CRAWL_MAX_URLS: int = Field(default=0)
-    CRAWL_MAX_SIZE: int = Field(default=0, description="Maximum total capture size in bytes (0 = unlimited).")
-    CRAWL_TIMEOUT: int = Field(default=0, description="Maximum total crawl runtime in seconds (0 = unlimited).")
+    CRAWL_MAX_URLS: int = Field(default=10_000)
+    CRAWL_MAX_SIZE: int = Field(default=100_000_000_000, description="Maximum total capture size in bytes (0 = unlimited).")
+    CRAWL_TIMEOUT: int = Field(default=24 * 60 * 60, description="Maximum total crawl runtime in seconds (0 = unlimited).")
     CRAWL_MAX_CONCURRENT_SNAPSHOTS: int = Field(
-        default=0,
+        default=2,
         ge=0,
         description="Automatic concurrency based on available resources (0), or an explicit per-crawl ceiling.",
     )
-    SNAPSHOT_MAX_SIZE: int = Field(default=0, description="Maximum size per snapshot in bytes (0 = unlimited).")
+    SNAPSHOT_MAX_SIZE: int = Field(default=3_000_000_000, description="Maximum size per snapshot in bytes (0 = unlimited).")
 
     RESOLUTION: str = Field(default="1440,2000")
     CHECK_SSL_VALIDITY: bool = Field(default=True, json_schema_extra={"x-advanced": True})

@@ -1,0 +1,4 @@
+{% extends 'plugins/config_field.html' %}
+{% block label %}Crawl time limit{% endblock %}
+{% block help %}Time budget for a crawl.{% endblock %}
+{% block widget %}{% include 'plugins/config_timeout.html' with slider_max=604800 %}{% endblock %}

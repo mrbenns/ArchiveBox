@@ -165,7 +165,8 @@ def test_add_view_admin_renders_plugin_settings(client, admin_user):
     assert b"Index only dry run" not in response.content
     assert b"Start paused" in response.content
     assert "Source ↗</a>" in response.content.decode()
-    assert "Documentation ↗</a>" in response.content.decode()
+    assert 'href="https://plugins.archivebox.io/#screenshot"' in response.content.decode()
+    assert "Docs ↗</a>" in response.content.decode()
     assert b"https://github.com/ArchiveBox/abx-plugins/tree/main/abx_plugins/plugins/" in response.content
     assert b"https://plugins.archivebox.io/#" in response.content
     assert not any(
@@ -364,7 +365,7 @@ def test_add_view_preserves_automatic_concurrency(client, public_add_enabled, co
 
     assert response.status_code == 302, response.context["form"].errors if response.context else response.content.decode()
     crawl = Crawl.objects.get(urls=data["url"])
-    assert get_config(crawl=crawl).CRAWL_MAX_CONCURRENT_SNAPSHOTS == (3 if concurrency == "3" else 0)
+    assert get_config(crawl=crawl).CRAWL_MAX_CONCURRENT_SNAPSHOTS == (int(concurrency) if concurrency not in (None, "") else 2)
 
 
 @pytest.mark.django_db(transaction=True)
@@ -376,6 +377,7 @@ def test_add_view_persona_switch_restores_automatic_concurrency(public_add_enabl
     port = urlsplit(live_server.url).port
     public_add_enabled.config["BASE_URL"] = f"http://archivebox.localhost:{port}"
     public_add_enabled.save(update_fields=["config"])
+    Persona.objects.filter(name="Default").update(config={"PERMISSIONS": "public", "CRAWL_MAX_CONCURRENT_SNAPSHOTS": 0})
     Persona.objects.create(name="Limited", config={"PERMISSIONS": "public", "CRAWL_MAX_CONCURRENT_SNAPSHOTS": 3})
 
     with sync_playwright() as playwright:

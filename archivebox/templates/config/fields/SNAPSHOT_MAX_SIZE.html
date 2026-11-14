@@ -1,3 +1,4 @@
 {% extends 'config/fields/CRAWL_MAX_SIZE.html' %}
 {% block label %}Snapshot size limit{% endblock %}
-{% block widget %}{% include 'config/number_range.html' with slider_max=107374182400 slider_step=1048576 slider_label='100 GiB' slider_unit='B' preferred_unit='MiB' placeholder='20971520' %}{% endblock %}
+{% block widget %}{% include 'config/number_range.html' with slider_max=10000000000000 slider_step=1 slider_label='10 TB' slider_unit='bytes-decimal' preferred_unit='GB' placeholder='3000000000' %}{% endblock %}
+{% block help %}Size of saved files for each snapshot.{% endblock %}

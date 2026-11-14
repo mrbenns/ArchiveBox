@@ -110,6 +110,54 @@ print(json.dumps({'timeout': baseline.WGET_TIMEOUT, 'machine_id': str(machine.pk
                     if plugin == "base" or plugin.startswith("search_backend_"):
                         expect(page.locator(f'[role="tab"][data-plugin="{plugin}"]')).to_have_count(1)
                 assert f"{surface}-secret" not in page.content()
+                search = page.get_by_role("searchbox", name="Search plugin settings")
+                for key, preset, zero_label, unit, amount in (
+                    ("CRAWL_MAX_URLS", "10000", "No limit", None, "10000"),
+                    ("CRAWL_MAX_SIZE", "100000000000", "No limit", "GB", "100"),
+                    ("SNAPSHOT_MAX_SIZE", "3000000000", "No limit", "GB", "3"),
+                    ("CRAWL_TIMEOUT", "86400", "No limit", "h", "24"),
+                    ("DELETE_AFTER", "1y", "Keep forever", "y", "1"),
+                ):
+                    search.fill(key)
+                    canonical = page.locator(f'[data-config-key="{key}"][name]')
+                    field = page.locator(".plugin-config-field").filter(has=canonical)
+                    editable = field.locator(".config-quantity-value" if unit else ".config-zero-value")
+                    expect(canonical).to_have_value("0" if key == "DELETE_AFTER" else preset)
+                    expect(editable).to_be_visible()
+                    expect(editable).to_have_attribute("placeholder", zero_label)
+                    expect(field.locator("input[type=range]")).to_be_visible()
+                    if unit:
+                        field.locator(".config-quantity-unit").select_option(unit)
+                    editable.fill(amount)
+                    expect(canonical).to_have_value(preset)
+                    editable.fill("")
+                    expect(canonical).to_have_value("0")
+                    expect(editable).to_be_visible()
+                    expect(editable).to_have_value("")
+                    if key != "DELETE_AFTER":
+                        editable.fill(amount)
+                        expect(canonical).to_have_value(preset)
+                    if key == "DELETE_AFTER":
+                        field.scroll_into_view_if_needed()
+                        page.screenshot(path=str(output / f"{surface}-retention-defaults.png"), full_page=True)
+                search.fill("CRAWL_MAX_CONCURRENT_SNAPSHOTS")
+                concurrency = page.locator(".config-concurrency")
+                editable = concurrency.locator(".config-concurrency-value")
+                expect(editable).to_be_visible()
+                expect(editable).to_have_value("2")
+                expect(editable).to_have_attribute("placeholder", "Automatic")
+                expect(concurrency.locator("[data-concurrency-slider]")).to_be_visible()
+                editable.fill("2")
+                expect(concurrency.locator(".plugin-config-input")).to_have_value("2")
+                editable.fill("")
+                expect(concurrency.locator(".plugin-config-input")).to_have_value("0")
+                expect(concurrency.locator(".config-concurrency-limit")).to_be_visible()
+                expect(editable).to_have_value("")
+                editable.fill("2")
+                search.fill("")
+                page.get_by_role("tab", name="Archiving", exact=True).click()
+                page.locator(".plugin-settings-content").evaluate("element => element.scrollTop = 0")
+                page.screenshot(path=str(output / f"{surface}-defaults.png"), full_page=True)
                 if surface == "system":
                     page.locator(".plugin-settings-tabs").evaluate("element => element.scrollTop = 0")
                     page.screenshot(path=str(output / "system-core.png"), full_page=True)
@@ -178,7 +226,7 @@ print(json.dumps({'timeout': baseline.WGET_TIMEOUT, 'machine_id': str(machine.pk
             url_limit = page.locator(".plugin-config-field").filter(has=page.locator('[data-config-key="CRAWL_MAX_URLS"][name]'))
             url_limit.locator(".config-limit-slider").fill("250")
             expect(url_limit.locator("[name]")).to_have_value("250")
-            url_limit.locator("[name]").fill("375")
+            url_limit.locator(".config-zero-value").fill("375")
             expect(url_limit.locator(".config-limit-slider")).to_have_value("375")
 
             search.fill("CRAWL_MAX_SIZE")
@@ -186,7 +234,7 @@ print(json.dumps({'timeout': baseline.WGET_TIMEOUT, 'machine_id': str(machine.pk
             size_limit.locator(".config-quantity-unit").select_option("GiB")
             size_limit.locator(".config-quantity-value").fill("2")
             expect(size_limit.locator("[name]")).to_have_value("2147483648")
-            expect(size_limit.locator(".config-limit-slider")).to_have_attribute("max", "107374182400")
+            expect(size_limit.locator(".config-limit-slider")).to_have_attribute("max", "100000000000000")
             expect(size_limit.locator(".config-limit-slider")).to_have_value("2147483648")
 
             search.fill("DELETE_AFTER")
@@ -216,6 +264,23 @@ print(json.dumps({'timeout': baseline.WGET_TIMEOUT, 'machine_id': str(machine.pk
             page.locator(".plugin-settings-tabs").evaluate("element => element.scrollTop = 0")
             page.locator(".plugin-settings-content").evaluate("element => element.scrollTop = 0")
             page.screenshot(path=str(output / "system-core.png"), full_page=True)
+            # Explicit zero overrides remain available without an extra mode click.
+            for key in ("CRAWL_MAX_URLS", "CRAWL_MAX_SIZE", "SNAPSHOT_MAX_SIZE", "CRAWL_TIMEOUT", "CRAWL_MAX_CONCURRENT_SNAPSHOTS"):
+                search.fill(key)
+                canonical = page.locator(f'[data-config-key="{key}"][name]')
+                field = page.locator(".plugin-config-field").filter(has=canonical)
+                field.locator(".config-zero-value, .config-quantity-value, .config-concurrency-value").fill("")
+                expect(canonical).to_have_value("0")
+                final_config[key] = 0
+            page.get_by_role("button", name="Save settings", exact=True).click()
+            expect(page.locator(".success")).to_be_visible()
+            assert stored_config("system") == final_config
+            search.fill("CRAWL_MAX_CONCURRENT_SNAPSHOTS")
+            expect(page.locator(".config-concurrency-value")).to_have_value("")
+            expect(page.locator(".config-concurrency-value")).to_have_attribute("placeholder", "Automatic")
+            page.get_by_role("button", name="Save settings", exact=True).click()
+            expect(page.locator(".success")).to_be_visible()
+            assert stored_config("system") == final_config
             browser.close()
     finally:
         stop_archivebox_process(server)

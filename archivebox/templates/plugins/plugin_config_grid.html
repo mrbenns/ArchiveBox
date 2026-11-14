@@ -183,8 +183,8 @@
                     const max = Number(input.max) || Math.max(Number(slider.dataset.defaultMax), Number(input.value) || 0);
                     slider.max = max;
                     const label = field.querySelector('[data-limit-max]');
-                    const units = [[1, 'B'], [1024, 'KiB'], [1048576, 'MiB'], [1073741824, 'GiB'], [1099511627776, 'TiB']];
-                    const [factor, unit] = label.dataset.unit === 'B' ? units.filter(([factor]) => factor <= max).at(-1) || units[0] : [1, label.dataset.unit];
+                    const units = label.dataset.unit === 'bytes-decimal' ? [[1, 'B'], [1e3, 'kB'], [1e6, 'MB'], [1e9, 'GB'], [1e12, 'TB']] : [[1, 'B'], [1024, 'KiB'], [1048576, 'MiB'], [1073741824, 'GiB'], [1099511627776, 'TiB']];
+                    const [factor, unit] = ['B', 'bytes-decimal'].includes(label.dataset.unit) ? units.filter(([factor]) => factor <= max).at(-1) || units[0] : [1, label.dataset.unit];
                     label.textContent = `${(max / factor).toLocaleString()} ${unit}`;
                 }
                 if (slider.matches('.config-timeout-slider')) {
@@ -195,7 +195,7 @@
                         const seconds = unit === 'ms' ? value / 1000 : value;
                         return seconds >= 3600 && seconds % 3600 === 0 ? `${seconds / 3600} hr` : seconds >= 60 && seconds % 60 === 0 ? `${seconds / 60} min` : `${value} ${unit}`;
                     };
-                    field.querySelector('[data-timeout-min]').textContent = durationLabel(Number(slider.min));
+                    field.querySelector('[data-timeout-min]').textContent = input.dataset.configKey === 'CRAWL_TIMEOUT' && Number(slider.min) === 0 ? 'No limit' : durationLabel(Number(slider.min));
                     field.querySelector('[data-timeout-max]').textContent = durationLabel(Number(slider.max));
                 }
                 slider.value = input.value;
