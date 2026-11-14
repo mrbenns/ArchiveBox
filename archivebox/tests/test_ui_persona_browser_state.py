@@ -156,7 +156,10 @@ def test_persona_browser_state_controls_in_real_browser(initialized_archive, bro
     try:
         with sync_playwright() as playwright:
             launch = {"executable_path": str(browser_runtime["chrome_binary"]), "args": browser_runtime["chrome_args"]}
-            profile = playwright.chromium.launch_persistent_context(str(persona_path / "chrome_profile"), **launch)
+            # Keep the browser-profile command's field trials; Playwright's
+            # override makes its imported IndexedDB invisible on reopen.
+            profile_launch = {**launch, "ignore_default_args": ["--disable-field-trial-config"]}
+            profile = playwright.chromium.launch_persistent_context(str(persona_path / "chrome_profile"), **profile_launch)
             profile.add_cookies(
                 [
                     {
@@ -257,7 +260,7 @@ def test_persona_browser_state_controls_in_real_browser(initialized_archive, bro
             output.mkdir(parents=True, exist_ok=True)
             state.locator(".persona-extension-setup summary").click()
             page.screenshot(path=str(output / "persona-browser-state.png"), full_page=True)
-            profile = playwright.chromium.launch_persistent_context(str(persona_path / "chrome_profile"), **launch)
+            profile = playwright.chromium.launch_persistent_context(str(persona_path / "chrome_profile"), **profile_launch)
             imported = {(cookie["domain"], cookie["name"]): cookie for cookie in profile.cookies()}
             assert imported[(".example.com", "session")]["value"] == "pasted-secret"
             assert imported[(".example.com", "session")]["sameSite"] == "Strict"
@@ -281,7 +284,7 @@ def test_persona_browser_state_controls_in_real_browser(initialized_archive, bro
             assert all(cookie["domain"] != local_domain for cookie in remaining["cookies"])
             assert local_domain not in (persona_path / "cookies.txt").read_text()
             assert COOKIE_B.strip() in (persona_path / "cookies.txt").read_text()
-            profile = playwright.chromium.launch_persistent_context(str(persona_path / "chrome_profile"), **launch)
+            profile = playwright.chromium.launch_persistent_context(str(persona_path / "chrome_profile"), **profile_launch)
             assert all(cookie["domain"].lstrip(".") != local_domain for cookie in profile.cookies())
             assert any(cookie["value"] == "profile-secret" for cookie in profile.cookies())
             stored_page = profile.new_page()
