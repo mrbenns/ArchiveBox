@@ -74,7 +74,8 @@ jobs:
               if capture.get("captured_at") and datetime.fromisoformat(capture["captured_at"]) <= datetime.fromisoformat(manifest["generated_at"]):
                   continue
               shutil.copyfile(Path(os.environ["RUNNER_TEMP"]) / "manual-screenshots" / image.name, image)
-              applied[view] = capture
+              if capture:
+                  applied[view] = capture
               digest = hashlib.sha256(image.read_bytes()).hexdigest()
               manifest["files"][image.name] = digest
               manifest.setdefault("manual_captures", {})[image.name] = {
