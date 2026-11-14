@@ -529,7 +529,8 @@ while [[ "$capture_index" -lt "${#VIEWS[@]}" ]]; do
     [[ "$capture_mode" != navbar-* ]] || config_after_click_selector=".navbar-dropdown[open] .navbar-menu"
     if [[ "$capture_mode" == plugin-config:* ]]; then
         config_selector="[data-plugin-name='${capture_mode#plugin-config:}']"
-        config_click_selector="$config_selector .plugin-config-marker"
+        config_click_selector="[role='tab'][data-plugin='${capture_mode#plugin-config:}']"
+        config_after_click_selector="$config_selector:not([hidden])"
     fi
     screenshot_user_data_dir="$PERSONAS_DIR/$ACTIVE_PERSONA/chrome_profile"
     [[ "$capture_mode" != "public" ]] || screenshot_user_data_dir="$CAPTURE_ROOT/public-browser-profile"
@@ -823,6 +824,7 @@ PY
             "Crawl schedule detail|$ADMIN_BASE_URL/admin/crawls/crawlschedule/$SCHEDULE_ID/change/|/admin/crawls/crawlschedule/$SCHEDULE_ID/change/|archivebox/crawls/admin.py"
             "Personas|$ADMIN_BASE_URL/admin/personas/persona/|/admin/personas/persona/|archivebox/personas/admin.py"
             "Persona detail|$ADMIN_BASE_URL/admin/personas/persona/$PERSONA_ID/change/|/admin/personas/persona/$PERSONA_ID/change/|archivebox/personas/admin.py"
+            "System settings|$ADMIN_BASE_URL/admin/settings/|/admin/settings/|archivebox/config/settings_views.py"
             "Machines|$ADMIN_BASE_URL/admin/machine/machine/|/admin/machine/machine/|archivebox/machine/admin.py"
             "Machine detail|$ADMIN_BASE_URL/admin/machine/machine/$MACHINE_ID/change/|/admin/machine/machine/$MACHINE_ID/change/|archivebox/machine/admin.py"
             "Network interfaces|$ADMIN_BASE_URL/admin/machine/networkinterface/|/admin/machine/networkinterface/|archivebox/machine/admin.py"

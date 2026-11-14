@@ -43,5 +43,45 @@
     "url": "http://web.archivebox.localhost:5797/web/20261008/arstechnica.com/01a118e17ab871cc9dd586c82b989d9b#forumdl/forum.jsonl",
     "path": "/web/20261008/arstechnica.com/01a118e17ab871cc9dd586c82b989d9b#forumdl/forum.jsonl",
     "ttfb_ms": 69
+  },
+  "add-urls": {
+    "name": "Add URLs",
+    "url": "http://admin.archivebox.localhost:50715/add/",
+    "path": "/add/",
+    "ttfb_ms": 148,
+    "captured_at": "2026-11-14T18:05:24.530884+00:00",
+    "source_revision": "e66137580ace6997f59c080239e036fbb80f66fd",
+    "plugin_revision": "85c63881e86be8986a48cf8f50e0acdfa8ee130a",
+    "source_path": "archivebox/core/views.py"
+  },
+  "persona-detail": {
+    "name": "Persona detail",
+    "url": "http://admin.archivebox.localhost:50715/admin/personas/persona/01a1da334f78724f911fa600aff93cc5/change/",
+    "path": "/admin/personas/persona/01a1da334f78724f911fa600aff93cc5/change/",
+    "ttfb_ms": 135,
+    "captured_at": "2026-11-14T18:05:24.530884+00:00",
+    "source_revision": "e66137580ace6997f59c080239e036fbb80f66fd",
+    "plugin_revision": "85c63881e86be8986a48cf8f50e0acdfa8ee130a",
+    "source_path": "archivebox/personas/admin.py"
+  },
+  "system-settings": {
+    "name": "System settings",
+    "url": "http://admin.archivebox.localhost:50715/admin/settings/",
+    "path": "/admin/settings/",
+    "ttfb_ms": 69,
+    "captured_at": "2026-11-14T18:05:24.530884+00:00",
+    "source_revision": "e66137580ace6997f59c080239e036fbb80f66fd",
+    "plugin_revision": "85c63881e86be8986a48cf8f50e0acdfa8ee130a",
+    "source_path": "archivebox/config/settings_views.py"
+  },
+  "persona-browser-state": {
+    "name": "Persona browser state",
+    "url": "http://admin.archivebox.localhost:50715/admin/personas/persona/01a1da334f78724f911fa600aff93cc5/change/",
+    "path": "/admin/personas/persona/01a1da334f78724f911fa600aff93cc5/change/",
+    "ttfb_ms": 78,
+    "captured_at": "2026-11-14T18:05:24.530884+00:00",
+    "source_revision": "e66137580ace6997f59c080239e036fbb80f66fd",
+    "plugin_revision": "85c63881e86be8986a48cf8f50e0acdfa8ee130a",
+    "source_path": "archivebox/personas/state_forms.py"
   }
 }

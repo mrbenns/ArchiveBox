@@ -40,6 +40,7 @@ REQUIRED_VIEW_NAMES = {
     "Crawl schedules",
     "Crawl schedule detail",
     "Persona detail",
+    "System settings",
     "Machine detail",
     "Network interface detail",
     "Binary detail",
@@ -473,7 +474,45 @@ def refresh_gallery(html_path: Path) -> None:
             f'<figure class="shot shot-{profile}">',
             f'<figure class="shot shot-{profile}" data-profile="{profile}">',
         )
-    html_path.write_text(render_gallery(header[0], content), encoding="utf-8")
+    # Targeted captures can introduce a view before the next full gallery run.
+    # Keep their own source revision instead of relabeling older screenshots.
+    manifest = json.loads(html_path.with_name("build.json").read_text())
+    manual = manifest.get("manual_captures", {})
+    refreshed = []
+    for filename, capture in manual.items():
+        if not filename.endswith("-desktop.png") or not capture.get("source_path"):
+            continue
+        view = filename.removesuffix("-desktop.png")
+        title = html.escape(capture["name"])
+        figures = []
+        for profile, (width, height) in CAPTURE_PROFILES.items():
+            image = f"{view}-{profile}.png"
+            if image not in manual or not html_path.with_name(image).is_file():
+                raise SystemExit(f"missing manual capture: {image}")
+            url = f"./{image}?v={manifest['files'][image][:12]}"
+            figures.append(
+                f'<figure class="shot shot-{profile}" data-profile="{profile}">'
+                f'<figcaption>{profile.title()} ({width}x{height})</figcaption><a href="{url}">'
+                f'<img src="{url}" width="{width}" height="{height}" loading="lazy" alt="{title} — {profile}"></a></figure>',
+            )
+        source = html.escape(f"https://github.com/ArchiveBox/ArchiveBox/blob/{capture['source_revision']}/{capture['source_path']}")
+        section = (
+            f'<article id="{view}"><h2>{title}</h2><p>'
+            f'<a href="{html.escape(capture["url"])}"><code>{html.escape(capture["path"])}</code></a> · '
+            f'<a href="{source}">View code</a> · Captured {html.escape(capture["captured_at"])} · '
+            f'~{capture["ttfb_ms"]}ms TTFB</p><div class="shots">{"".join(figures)}</div></article>'
+        )
+        pattern = r'<article id="' + re.escape(view) + r'">.*?</article>'
+        content = (
+            re.sub(pattern, lambda _: section, content, flags=re.DOTALL) if re.search(pattern, content, re.DOTALL) else content + section
+        )
+        refreshed.append(f'<a href="#{view}">{title}</a>')
+    heading = re.sub(r'<p id="latest-captures">.*?</p>', "", header[0], flags=re.DOTALL)
+    if refreshed:
+        heading = heading.replace("Generated from ArchiveBox", "Base gallery captured from ArchiveBox")
+        heading = heading.replace("Desktop, tablet, and mobile viewports are captured from the same build.", "")
+        heading = heading.replace("</header>", f'<p id="latest-captures">Updated views: {" · ".join(refreshed)}</p></header>')
+    html_path.write_text(render_gallery(heading, content), encoding="utf-8")
 
 
 def main() -> None:
