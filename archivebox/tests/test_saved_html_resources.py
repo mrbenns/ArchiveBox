@@ -392,6 +392,7 @@ def test_saved_html_stylesheets_and_scripts_resolve_locally_and_raw_stays_exact(
 
 
 @pytest.mark.django_db(transaction=True)
+@pytest.mark.parametrize("redirected", [False, True], ids=["direct", "redirected"])
 @pytest.mark.parametrize("metadata", [b"", NEWLINE_METADATA], ids=["lf", "mixed-newlines"])
 @pytest.mark.parametrize("card,attribute_gap", [(False, " "), (True, " "), (True, "")], ids=["full", "card", "adjacent-attributes-card"])
 def test_recorded_crontab_styles_and_script_render_on_snapshot_origin(
@@ -402,6 +403,7 @@ def test_recorded_crontab_styles_and_script_render_on_snapshot_origin(
     tmp_path,
     metadata,
     attribute_gap,
+    redirected,
 ):
     from archivebox.core.routes_util import get_snapshot_host
     from archivebox.machine.models import Machine
@@ -414,10 +416,14 @@ def test_recorded_crontab_styles_and_script_render_on_snapshot_origin(
         "SERVER_SECURITY_MODE": "safe-subdomains-fullreplay",
     }
     machine.save(update_fields=["config"])
-    snapshot.url = "https://crontab.guru/" if card else "https://archivebox.io/tests/"
+    snapshot.url = "https://crontab.guru/" if card and not redirected else "https://archivebox.io/tests/"
     snapshot.permissions = "public"
     snapshot.save(update_fields=["url", "permissions"])
     install_responses(snapshot.output_dir)
+    if redirected:
+        navigation = snapshot.output_dir / "chrome/navigation.json"
+        navigation.parent.mkdir(exist_ok=True)
+        navigation.write_text(json.dumps({"url": snapshot.url, "finalUrl": "https://crontab.guru/", "status": 200}))
     captured = snapshot.output_dir / "responses/all/page.html"
     css_integrity = "sha384-" + base64.b64encode(hashlib.sha384((FIXTURE / "styles.css").read_bytes()).digest()).decode()
     script_integrity = "sha384-" + base64.b64encode(hashlib.sha384((FIXTURE / "index.js").read_bytes()).digest()).decode()
