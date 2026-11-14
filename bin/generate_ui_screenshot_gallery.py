@@ -40,6 +40,7 @@ REQUIRED_VIEW_NAMES = {
     "Crawl schedules",
     "Crawl schedule detail",
     "Persona detail",
+    "Persona browser state",
     "System settings",
     "Machine detail",
     "Network interface detail",

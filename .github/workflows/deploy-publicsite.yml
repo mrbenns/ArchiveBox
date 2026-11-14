@@ -71,7 +71,7 @@ jobs:
               image = Path(filename)
               view = image.stem.rsplit("-", 1)[0]
               capture = captures.get(view, {})
-              if capture.get("captured_at") and datetime.fromisoformat(capture["captured_at"]) <= datetime.fromisoformat(manifest["generated_at"]):
+              if image.name in manifest["files"] and capture.get("captured_at") and datetime.fromisoformat(capture["captured_at"]) <= datetime.fromisoformat(manifest["generated_at"]):
                   continue
               shutil.copyfile(Path(os.environ["RUNNER_TEMP"]) / "manual-screenshots" / image.name, image)
               if capture:
