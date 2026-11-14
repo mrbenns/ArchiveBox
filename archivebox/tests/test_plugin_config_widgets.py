@@ -76,7 +76,7 @@ def test_config_widget_overrides_in_browser(initialized_archive, browser_runtime
                     if plugin == "puppeteer":
                         card.get_by_role("button", name="+ Expand details", exact=True).click()
                         expect(card.locator('textarea[data-config-key="PUPPETEER_SCRIPT"]')).to_have_value(
-                            "await page.evaluate(() => {\n  document.querySelectorAll('details').forEach(el => el.open = true);\n});"
+                            "await page.evaluate(() => {\n  document.querySelectorAll('details').forEach(el => el.open = true);\n});",
                         )
                     if plugin == "playwright":
                         card.get_by_role("button", name="+ Expand details", exact=True).click()
@@ -105,7 +105,7 @@ def test_config_widget_overrides_in_browser(initialized_archive, browser_runtime
                     if plugin == "autosummary":
                         card.get_by_role("button", name="+ Bullet points", exact=True).click()
                         expect(card.locator('textarea[data-config-key="AUTOSUMMARY_PROMPT"]')).to_have_value(
-                            "Use concise bullet points. Focus on the main ideas and conclusions."
+                            "Use concise bullet points. Focus on the main ideas and conclusions.",
                         )
                     expect(card.locator(".plugin-config-control").first).to_be_visible()
                     card.locator("textarea").evaluate_all("elements => elements.forEach(element => element.scrollTop = 0)")
@@ -143,11 +143,11 @@ def test_config_widget_overrides_in_browser(initialized_archive, browser_runtime
                     expect(card.locator(".config-range-slider:not(.config-timeout-slider)")).to_have_value("7")
                     page.locator('[role="tab"][data-plugin="puppeteer"]').click()
                     expect(page.locator('textarea[data-config-key="PUPPETEER_SCRIPT"]')).to_have_value(
-                        "await page.evaluate(() => {\n  document.querySelectorAll('details').forEach(el => el.open = true);\n});"
+                        "await page.evaluate(() => {\n  document.querySelectorAll('details').forEach(el => el.open = true);\n});",
                     )
                     page.locator('[role="tab"][data-plugin="autosummary"]').click()
                     expect(page.locator('textarea[data-config-key="AUTOSUMMARY_PROMPT"]')).to_have_value(
-                        "Use concise bullet points. Focus on the main ideas and conclusions."
+                        "Use concise bullet points. Focus on the main ideas and conclusions.",
                     )
             browser.close()
     finally:

@@ -42,7 +42,7 @@ def prepare(admin_base_url, recipes):
                     "screenshot-gallery",
                     "--settings",
                     json.dumps(recipe["settings"]),
-                )
+                ),
             )
         source_id = source["id"]
         command("manage", "importers", "--source", source_id, "--action", "preview")

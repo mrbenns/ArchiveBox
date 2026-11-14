@@ -141,7 +141,7 @@ def plugin_screenshot_plan() -> dict:
             if recipe.get("importer"):
                 required.extend([recipe["view"] + " history", recipe["view"] + " snapshots", recipe["view"] + " export"])
                 importer_views.append(
-                    {"name": recipe["view"], "plugin": plugin, "feed": recipe["importer"], "settings": recipe.get("config_overrides", {})}
+                    {"name": recipe["view"], "plugin": plugin, "feed": recipe["importer"], "settings": recipe.get("config_overrides", {})},
                 )
             if recipe.get("config"):
                 config_name = recipe["view"] + " configuration" if recipe.get("importer") else recipe["view"]
@@ -157,7 +157,7 @@ def plugin_screenshot_plan() -> dict:
                         if feed
                         else "archivebox/templates/plugins/plugin_config_grid.html",
                         "mode": "" if feed else f"plugin-config:{plugin}",
-                    }
+                    },
                 )
         elif enabled and (
             recipe.get("url")

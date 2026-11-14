@@ -52,8 +52,8 @@ def test_provider_config_settings_in_browser(initialized_archive, browser_runtim
                     expect(card).to_be_visible()
                     expect(
                         tab.locator("xpath=ancestor::div[contains(@class, 'plugin-settings-nav-group')]").locator(
-                            ".plugin-settings-category"
-                        )
+                            ".plugin-settings-category",
+                        ),
                     ).to_have_text("Text" if plugin in TEXT_PROVIDERS else "Media")
                     expect(card.locator(".plugin-choice-description")).to_have_text(config["description"])
                     logo = card.locator(".plugin-choice-icon svg").first

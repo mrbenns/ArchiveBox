@@ -11,8 +11,8 @@ repos:
     rev: v2.4.1
     hooks:
       - id: codespell
-        # Captured minified JavaScript must retain its original bytes and names.
-        exclude: ^archivebox/tests/fixtures/crontab-resources/index\.js$
+        # Captured and bundled third-party JavaScript is not prose.
+        exclude: ^archivebox/(tests/fixtures/crontab-resources/index\.js|templates/static/model-viewer/[^/]+\.bundle\.js)$
         additional_dependencies:
           - tomli
 

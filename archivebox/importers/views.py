@@ -151,7 +151,8 @@ def run_detail(request, run_id):
             "title": run.get_action_display(),
             "run": run,
             "snapshots_changelist": archivebox_admin._registry[Snapshot].render_embedded_changelist(
-                request, {"crawl_id": str(run.crawl_id)}
+                request,
+                {"crawl_id": str(run.crawl_id)},
             )
             if run.crawl_id
             else "",
