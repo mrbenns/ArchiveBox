@@ -1,0 +1,50 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ title }}</title>
+    <style>
+        html, body { margin: 0; padding: 0; }
+        #document { display: block; width: 100%; height: 1px; border: 0; }
+    </style>
+</head>
+<body>
+    <iframe id="document" title="Saved page" data-src="{{ document_url }}"></iframe>
+    <script>
+    (() => {
+        const frame = document.getElementById('document');
+        let observer;
+        frame.addEventListener('load', () => {
+            observer?.disconnect();
+            const doc = frame.contentDocument;
+            if (!doc?.body) return;
+            // Change only the rendered document, never the saved artifact.
+            // Natural root height allows both growth and shrinkage without
+            // measuring the viewport that this callback is itself resizing.
+            const style = doc.createElement('style');
+            style.textContent = 'html,body{height:auto!important;min-height:0!important}body{display:flow-root}';
+            doc.head.append(style);
+            const resize = () => {
+                const body = doc.body;
+                const margins = frame.contentWindow.getComputedStyle(body);
+                const height = Math.ceil(body.getBoundingClientRect().height +
+                    parseFloat(margins.marginTop) + parseFloat(margins.marginBottom));
+                if (height > 0 && frame.style.height !== `${height}px`) frame.style.height = `${height}px`;
+                // The wrapper can be below a tall output tray, where Chrome
+                // defers ResizeObserver delivery until it becomes visible.
+                if (height > 0 && window.name === 'preview') parent.postMessage({type: 'archivebox-preview-height', height}, '*');
+            };
+            observer = new ResizeObserver(resize);
+            observer.observe(doc.body);
+            doc.addEventListener('load', resize, true);
+            frame.contentWindow.addEventListener('resize', resize);
+            doc.fonts.ready.then(resize);
+            resize();
+        });
+        frame.src = frame.dataset.src + location.hash;
+        window.addEventListener('pagehide', () => observer?.disconnect(), {once: true});
+    })();
+    </script>
+</body>
+</html>

@@ -1135,6 +1135,25 @@ def serve_static_with_byterange_support(request, path, document_root=None, show_
         except (OSError, RuntimeError, ValueError):
             pass
 
+    if request.GET.get("preview") and not thumbnail and not request.GET.get("raw") and content_type.startswith("text/html"):
+        document_query = request.GET.copy()
+        document_query.pop("preview", None)
+        document_url = request.path
+        if document_query:
+            document_url = f"{document_url}?{document_query.urlencode()}"
+        response = HttpResponse(
+            loader.render_to_string("static/html_preview.html", {"document_url": document_url, "title": fullpath.name}),
+            content_type="text/html; charset=utf-8",
+        )
+        _set_transformed_response_headers(response, fullpath, statobj, None, cache_policy)
+        return _apply_archive_replay_headers(
+            response,
+            fullpath=fullpath,
+            content_type="text/html; charset=utf-8",
+            is_archive_replay=is_archive_replay,
+            config=config,
+        )
+
     if enrich_document and request.method != "HEAD":
         try:
             rewritten, count = rewrite_plugin_replay_document(

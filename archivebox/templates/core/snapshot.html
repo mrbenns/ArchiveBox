@@ -1180,6 +1180,9 @@
                 const url = new URL(raw, window.location.href)
                 const base = new URL("{% snapshot_base_url snapshot %}", window.location.href)
                 if (url.origin === base.origin && url.pathname.startsWith(base.pathname.replace(/\/+$/, '') + '/')) {
+                    {% if not STATIC_EXPORT %}
+                    if (/\.html?$/i.test(url.pathname) && !url.searchParams.has('preview')) url.searchParams.set('preview', '1')
+                    {% endif %}
                     url.searchParams.set('_abx_rev', revision)
                 }
                 return url.href
@@ -1606,6 +1609,7 @@
                 candidate.removeAttribute('aria-hidden')
                 candidate.removeAttribute('tabindex')
                 candidate.dataset.replayPainted = '1'
+                candidate.contentWindow.postMessage({type: 'archivebox-preview-activated'}, new URL(candidate.src).origin)
                 replayPreload = null
                 replayPreloadCard = null
                 document.querySelectorAll('.selected-card').forEach(selected => selected.classList.remove('selected-card'))
