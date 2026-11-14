@@ -214,14 +214,15 @@
     .abx-persona-artifacts { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     .abx-persona-path-list { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 12px; }
     .abx-persona-storage > summary { cursor: pointer; font: 13px/1.5 var(--font-family-primary); color: #475569; }
-    #content-main #persona_form .persona-card-config > details,
-    #content-main #persona_form .persona-card-timestamps > details { width: 100%; }
-    #content-main #persona_form .persona-card-config > details > summary,
-    #content-main #persona_form .persona-card-timestamps > details > summary { padding: 10px 18px; border: 0; cursor: pointer; background: #f8fafc; color: #475569; }
-    #content-main #persona_form .persona-card-config > details > summary h2,
-    #content-main #persona_form .persona-card-timestamps > details > summary h2 { padding: 0 8px !important; background: transparent !important; text-transform: none; letter-spacing: 0; }
-    #content-main #persona_form .persona-card-config > details > .form-row,
-    #content-main #persona_form .persona-card-timestamps > details > .form-row { padding: 12px 18px; }
+    #content-main #persona_form .persona-card-config .form-row,
+    #content-main #persona_form .persona-card-timestamps .form-row { padding: 12px 18px!important; }
+    #content-main #persona_form .persona-card-config .flex-container { max-width:100%!important; }
+    #content-main #persona_form .persona-card-config .field-config>div>label { display:none; }
+    #content-main #persona_form .persona-card-config input { min-height:32px; font-size:12px; border-radius:6px; }
+    #content-main #persona_form .persona-card-timestamps .form-multiline { display:flex!important;flex-wrap:wrap;gap:28px;max-width:100%!important; }
+    #content-main #persona_form .persona-card-timestamps .fieldBox { display:flex!important;flex-direction:column;gap:5px;flex:1!important;min-width:240px!important; }
+    #content-main #persona_form .persona-card-timestamps label { font-size:11px;color:#778293; }
+    #content-main #persona_form .persona-card-timestamps .readonly { border:0;background:#f6f8fa;border-radius:7px;padding:9px 12px;font-size:12px; }
     @media (max-width: 800px) {
         #content-main #persona_form .persona-card-primary .form-multiline { grid-template-columns: 1fr; gap: 14px; }
         .abx-persona-artifacts, .abx-persona-path-list { grid-template-columns: 1fr; }

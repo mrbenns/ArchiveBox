@@ -725,17 +725,24 @@ def export_profile_cookies(source: PersonaImportSource, staged_profile: Path, ou
     return payload
 
 
-def run_browser_profile(**request) -> None:
+def run_browser_profile(**request) -> dict:
     from abx_dl.execution import iter_plugin_command
     from archivebox.plugins.discovery import get_plugin_catalog
 
     command = get_plugin_catalog().find_command("browser-profile")
+    result = {}
     try:
         # A profile may contain large offline stores; cancellation still reaps the command.
-        for _line in iter_plugin_command(command, stdin=[json.dumps(request)], timeout=None):
-            pass
+        for line in iter_plugin_command(command, stdin=[json.dumps(request)], timeout=None):
+            try:
+                payload = json.loads(line)
+            except ValueError:
+                continue
+            if isinstance(payload, dict):
+                result = payload
     except subprocess.CalledProcessError as error:
         raise ValueError(error.stderr.strip() or "Browser profile preparation failed") from error
+    return result
 
 
 def export_browser_state(
@@ -914,15 +921,12 @@ def _merge_auth_storage(existing_file: Path, new_file: Path) -> None:
     existing_session = existing_payload.setdefault("sessionStorage", {})
 
     for origin, payload in (new_payload.get("localStorage") or {}).items():
-        existing_local[origin] = payload
+        existing_local[origin] = {**existing_local.get(origin, {}), **payload}
     for origin, payload in (new_payload.get("sessionStorage") or {}).items():
-        existing_session[origin] = payload
+        existing_session[origin] = {**existing_session.get(origin, {}), **payload}
 
-    origins = {entry["origin"]: entry for entry in existing_payload.get("origins", [])}
-    origins.update({entry["origin"]: entry for entry in new_payload.get("origins", [])})
-    new_tabs = new_payload.get("tabs", [])
-    new_urls = {tab["url"] for tab in new_tabs}
-    tabs = [tab for tab in existing_payload.get("tabs", []) if tab["url"] not in new_urls] + new_tabs
+    origins = _merge_origin_entries(existing_payload.get("origins", []), new_payload.get("origins", []), "origin")
+    tabs = _merge_origin_entries(existing_payload.get("tabs", []), new_payload.get("tabs", []), "url")
 
     cookies = _merge_cookie_dicts(existing_payload.get("cookies") or [], new_payload.get("cookies") or [])
 
@@ -932,11 +936,93 @@ def _merge_auth_storage(existing_file: Path, new_file: Path) -> None:
         "cookies": cookies,
         "localStorage": existing_local,
         "sessionStorage": existing_session,
-        "origins": list(origins.values()),
+        "origins": origins,
         "tabs": tabs,
         "user_agent": new_payload.get("user_agent") or existing_payload.get("user_agent") or "",
     }
     existing_file.write_text(json.dumps(merged, indent=2, sort_keys=True) + "\n")
+
+
+def _merge_named_entries(existing, incoming, key):
+    merged = {json.dumps(entry[key], sort_keys=True): entry for entry in existing}
+    for entry in incoming:
+        identity = json.dumps(entry[key], sort_keys=True)
+        merged[identity] = {**merged.get(identity, {}), **entry}
+    return list(merged.values())
+
+
+def _merge_origin_entries(existing, incoming, identity_key):
+    merged = {entry[identity_key]: entry for entry in existing}
+    for entry in incoming:
+        previous = merged.get(entry[identity_key], {})
+        result = {**previous, **entry}
+        for kind in ("localStorage", "sessionStorage"):
+            if kind in entry:
+                result[kind] = _merge_named_entries(previous.get(kind, []), entry[kind], "name")
+        if "indexedDB" in entry:
+
+            def database_identity(database):
+                return (database.get("name") or database.get("data", {}).get("databaseName"), "dexie" if "data" in database else "native")
+
+            databases = {database_identity(database): database for database in previous.get("indexedDB", [])}
+            for database in entry["indexedDB"]:
+                identity = database_identity(database)
+                old_database = databases.pop(identity, {})
+                combined = {**old_database, **database}
+                if "stores" in database and "data" not in database:
+                    stores = {store["name"]: store for store in old_database.get("stores", [])}
+                    for store in database["stores"]:
+                        old_store = stores.get(store["name"], {})
+                        records = {}
+                        for record in [*old_store.get("records", []), *store.get("records", [])]:
+                            key = record.get("key", record.get("keyEncoded"))
+                            key_path = store.get(
+                                "keyPathArray",
+                                store.get("keyPath", old_store.get("keyPathArray", old_store.get("keyPath"))),
+                            )
+                            if key is None and key_path:
+
+                                def value_at(path):
+                                    value = record.get("value", {})
+                                    for component in path.split("."):
+                                        value = value.get(component) if isinstance(value, dict) else None
+                                    return value
+
+                                key = [value_at(path) for path in key_path] if isinstance(key_path, list) else value_at(key_path)
+                                if isinstance(key, list) and any(component is None for component in key):
+                                    key = None
+                            # Encoded values without explicit keys cannot safely be decoded here.
+                            # Keep distinct unknown identities instead of collapsing them into null.
+                            record_identity = (
+                                ("key", json.dumps(key, sort_keys=True))
+                                if key is not None
+                                else ("record", json.dumps(record, sort_keys=True))
+                            )
+                            records[record_identity] = record
+                        stores[store["name"]] = {**old_store, **store, "records": list(records.values())}
+                    combined["stores"] = list(stores.values())
+                elif isinstance(database.get("data"), str) and isinstance(old_database.get("data"), str):
+                    old_export = json.loads(old_database["data"])
+                    new_export = json.loads(database["data"])
+                    old_data, new_data = old_export["data"], new_export["data"]
+                    combined_data = {**old_data, **new_data}
+                    for key, field_identity in (("tables", "name"), ("data", "tableName")):
+                        if key in new_data:
+                            combined_data[key] = _merge_named_entries(old_data.get(key, []), new_data[key], field_identity)
+                    previous_tables = {table["tableName"]: table for table in old_data.get("data", [])}
+                    incoming_tables = {table["tableName"]: table for table in new_data.get("data", [])}
+                    for table in combined_data.get("data", []):
+                        name = table["tableName"]
+                        if name in incoming_tables:
+                            # Dexie owns primary-key interpretation; apply older rows first
+                            # and incoming rows last so omitted records remain available.
+                            table["rows"] = [*previous_tables.get(name, {}).get("rows", []), *incoming_tables[name].get("rows", [])]
+                    combined["data"] = json.dumps({**old_export, **new_export, "data": combined_data})
+                    combined["stores"] = _merge_named_entries(old_database.get("stores", []), database.get("stores", []), "name")
+                databases[identity] = combined
+            result["indexedDB"] = list(databases.values())
+        merged[entry[identity_key]] = result
+    return list(merged.values())
 
 
 def _load_auth_storage(path: Path) -> dict:
@@ -973,7 +1059,7 @@ def _merge_cookie_dicts(existing: list[dict], new: list[dict]) -> list[dict]:
         merged[key] = cookie
     for cookie in new:
         key = (str(cookie.get("domain") or ""), str(cookie.get("path") or "/"), str(cookie.get("name") or ""))
-        merged[key] = cookie
+        merged[key] = {**merged.get(key, {}), **cookie}
     return list(merged.values())
 
 

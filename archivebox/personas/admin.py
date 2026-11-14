@@ -76,7 +76,7 @@ class PersonaAdmin(ConfigEditorMixin, BaseModelAdmin):
             "Advanced",
             {
                 "fields": ("config",),
-                "classes": ("card", "wide", "collapse", "persona-card-config"),
+                "classes": ("card", "wide", "persona-card-config"),
             },
         ),
     )
@@ -95,7 +95,7 @@ class PersonaAdmin(ConfigEditorMixin, BaseModelAdmin):
             "Details",
             {
                 "fields": (("id", "created_at"),),
-                "classes": ("card", "wide", "collapse", "persona-card-timestamps"),
+                "classes": ("card", "wide", "persona-card-timestamps"),
             },
         ),
     )
@@ -136,7 +136,7 @@ class PersonaAdmin(ConfigEditorMixin, BaseModelAdmin):
             "admin/personas/persona/browser_state.html",
             {
                 "persona": obj,
-                "cards": browser_state_summary(obj),
+                "state": browser_state_summary(obj),
                 "can_change": getattr(obj, "_browser_state_can_change", False),
                 "server_url": getattr(obj, "_browser_state_server_url", ""),
                 "state_url": reverse("admin:personas_persona_browser_state", args=[obj.pk]),
@@ -190,7 +190,8 @@ class PersonaAdmin(ConfigEditorMixin, BaseModelAdmin):
         persona = self.get_object(request, str(object_id))
         if persona is None:
             raise Http404
-        if not self.has_change_permission(request, persona):
+        inspecting = request.POST.get("action") == "inspect-domains"
+        if not (self.has_view_or_change_permission(request, persona) if inspecting else self.has_change_permission(request, persona)):
             raise PermissionDenied
         form = PersonaStateForm(request.POST)
         if form.is_valid():
@@ -200,15 +201,24 @@ class PersonaAdmin(ConfigEditorMixin, BaseModelAdmin):
                 form.apply(persona)
             except ValidationError as error:
                 form.add_error(None, error)
+            except ValueError:
+                form.add_error(None, "Unable to update the Chrome profile. Check that the browser is available and try again.")
             except OSError:
                 form.add_error(None, "Unable to write browser state. Check the persona directory permissions.")
             else:
-                self.log_change(
-                    request,
-                    persona,
-                    f"{form.cleaned_data['action'].capitalize()} {form.cleaned_data['artifact']} browser state.",
+                if not inspecting:
+                    self.log_change(
+                        request,
+                        persona,
+                        f"{form.cleaned_data['action'].capitalize()} {form.cleaned_data.get('domain') or form.cleaned_data['artifact']} browser state.",
+                    )
+                return JsonResponse(
+                    {
+                        "saved": not inspecting,
+                        "profile_synced": getattr(form, "profile_synced", None),
+                        "state": browser_state_summary(persona, getattr(form, "profile_inventory", None)),
+                    },
                 )
-                return JsonResponse({"saved": True, "cards": browser_state_summary(persona)})
         return JsonResponse({"errors": form.errors.get_json_data()}, status=400)
 
     def duplicate_settings_view(self, request, object_id):
@@ -258,8 +268,10 @@ class PersonaAdmin(ConfigEditorMixin, BaseModelAdmin):
 
     def render_change_form(self, request, context, add=False, change=False, form_url="", obj=None):
         if obj is not None:
+            from archivebox.core.routes_util import get_api_base_url
+
             obj._browser_state_can_change = self.has_change_permission(request, obj)
-            obj._browser_state_server_url = request.build_absolute_uri("/")
+            obj._browser_state_server_url = get_api_base_url(request=request)
         context["detected_profile_count"] = len(discover_local_browser_profiles()) if add else 0
         return super().render_change_form(request, context, add=add, change=change, form_url=form_url, obj=obj)
 

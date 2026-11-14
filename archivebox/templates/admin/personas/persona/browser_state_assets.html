@@ -1,62 +1,80 @@
 <style>
-.persona-browser-state { width:100%; font-family:var(--font-family-primary); }
-.persona-state-cards { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px; }
-.persona-state-card { padding:18px;border:1px solid #dfe3eb;border-radius:14px;background:#fff;min-width:0; }
-.persona-state-card header { display:flex;align-items:center;gap:10px;margin-bottom:14px; }
-.persona-state-card header>span { display:grid;place-items:center;background:#eff5ff;color:#1670d8;border-radius:10px;width:34px;height:34px;font-size:24px; }
-.persona-state-card h3 { margin:0;font-size:15px;color:#253046; }
-.persona-state-count { font-size:13px;color:#647084; }.persona-state-count strong { font-size:30px;line-height:1.2;color:#253046;font-weight:600; }
-.persona-state-card p { margin:8px 0;font-size:12px;color:#647084; }.persona-state-card small { display:block;margin:12px 0;color:#798395;font-size:11px; }
-.persona-state-domains { display:flex;flex-wrap:wrap;gap:5px; }.persona-state-domains span { max-width:100%;overflow:hidden;text-overflow:ellipsis;padding:4px 7px;border-radius:6px;background:#f0f4f9;font-size:11px;color:#455369; }
-.persona-state-editor>summary,.persona-extension-setup>summary { cursor:pointer;color:#1665c1;font-size:13px; }
-.persona-state-editor textarea { box-sizing:border-box!important;width:100%!important;min-height:100px;margin:12px 0 8px;padding:9px!important;border:1px solid #ccd5e1!important;border-radius:8px;font:12px/1.5 monospace!important; }
-.persona-state-editor input[type=file] { width:100%;font-size:12px; }.persona-state-actions { display:flex;flex-wrap:wrap;gap:8px;margin-top:12px; }
-.persona-state-actions button { padding:7px 10px;border:1px solid #cbd5e1;border-radius:7px;background:#f8fafc;color:#185ca9;font-size:12px;cursor:pointer; }.persona-state-actions .persona-state-clear { color:#b42318;background:white; }
-.persona-state-message { margin-top:8px;font-size:12px;color:#197341;white-space:pre-wrap; }.persona-state-message[data-error=true] { color:#b42318; }
-.persona-extension-setup { margin-top:16px;padding:16px 18px;background:#f7f9fc;border:1px solid #dfe3eb;border-radius:12px; }.persona-extension-setup summary { font-weight:600; }.persona-extension-setup summary span { color:#7c8798;font-weight:400;margin-left:12px; }
-.persona-extension-downloads { display:flex;flex-wrap:wrap;gap:9px;margin:16px 0; }.persona-extension-downloads a { display:flex;align-items:center;gap:8px;padding:9px 12px;border:1px solid #dfe3eb;background:white;border-radius:9px;font-size:12px; }.persona-extension-downloads img { width:24px;height:24px;object-fit:contain; }.persona-extension-setup ol { padding-left:20px;font-size:13px;line-height:1.8; }.persona-extension-setup code { overflow-wrap:anywhere; }.persona-extension-setup>a { font-size:12px; }
-@media(max-width:800px){.persona-state-cards { grid-template-columns:1fr; }}
+.persona-browser-state { width:100%;font-family:var(--font-family-primary);color:#344054; }
+.persona-browser-state .persona-state-heading { color:#344054;height:auto;min-height:32px; }
+.persona-browser-state .persona-state-domain button { align-self:center;margin:0;padding:0;line-height:1; }
+.persona-state-heading { display:flex;align-items:center;gap:12px;margin-bottom:14px; }.persona-state-heading>strong { font-size:17px; }.persona-state-heading input { margin-left:auto;width:260px!important;height:32px;padding:6px 10px!important;border:1px solid #dce2ea!important;border-radius:7px;background:#f8fafc!important;font-size:12px!important; }.persona-state-heading>button { border:1px solid #dce2ea;border-radius:6px;background:white;color:#51749b;width:25px;height:25px;font-size:19px;line-height:1;cursor:pointer; }
+.persona-profile-metadata { display:flex;align-items:flex-start;gap:24px;padding:12px 14px;border-radius:9px;background:#f5f7fa;margin-bottom:12px;font-size:11px; }.persona-profile-metadata>div { display:flex;flex-direction:column;gap:5px; }.persona-profile-metadata span { color:#778293; }.persona-profile-metadata strong { font-size:12px;font-weight:500;white-space:nowrap; }.persona-profile-path { flex:1;min-width:0; }.persona-profile-path code { background:none;font-size:11px;overflow-wrap:anywhere; }
+.persona-state-domains { max-height:320px;overflow:auto; }.persona-state-domain { display:flex;align-items:center;gap:14px;min-height:40px;border-bottom:1px solid #edf0f4;font-size:12px; }.persona-state-domain[hidden] { display:none; }.persona-state-domain>strong { font-weight:500;min-width:170px;overflow-wrap:anywhere; }.persona-domain-count { color:#778293;white-space:nowrap; }.persona-state-sources { display:flex;flex-wrap:wrap;gap:5px;flex:1; }.persona-state-sources span { border-radius:5px;padding:3px 6px;background:#f1f4f8;color:#647084;font-size:10px; }.persona-state-domain button { display:grid;place-items:center;width:25px;height:25px;flex:none;border:0;background:transparent;color:#9aa3af;font-size:20px;cursor:pointer;border-radius:5px; }.persona-state-domain button:hover { color:#b42318;background:#fff0ee; }
+.persona-state-empty { font-size:12px;color:#8b95a4;padding:10px 0; }.persona-state-message { font-size:12px;color:#197341;white-space:pre-wrap;margin-top:6px; }.persona-state-message[data-error=true] { color:#b42318; }.persona-state-unavailable { font-size:11px;color:#8b95a4; }
+.persona-state-import { margin-bottom:14px; }.persona-state-import textarea { box-sizing:border-box!important;width:100%!important;margin:0 0 8px;padding:10px!important;border:1px solid #dce2ea!important;border-radius:7px;font:12px/1.5 monospace!important; }.persona-state-import input[type=file] { flex:1;min-width:0;font-size:11px; }.persona-state-actions { display:flex;align-items:center;gap:10px; }.persona-state-actions button { padding:7px 11px;border:1px solid #dce2ea;border-radius:6px;background:#f8fafc;color:#28619c;font-size:12px;cursor:pointer; }
+.persona-extension-setup { margin-top:12px;padding-top:12px;border-top:1px solid #edf0f4; }.persona-extension-setup>summary { cursor:pointer;color:#647084;font-size:12px; }.persona-extension-setup summary span { color:#929aa6;margin-left:10px; }.persona-extension-downloads { display:flex;flex-wrap:wrap;gap:8px;margin:12px 0; }.persona-extension-downloads a { display:flex;align-items:center;gap:7px;padding:7px 10px;border:1px solid #dfe3eb;background:white;border-radius:7px;font-size:12px; }.persona-extension-downloads img { width:22px;height:22px;object-fit:contain; }.persona-extension-setup ol { padding-left:20px;font-size:12px;line-height:1.8; }.persona-extension-setup code { overflow-wrap:anywhere; }.persona-extension-setup>a { font-size:12px; }
+@media(max-width:800px){.persona-profile-metadata { flex-wrap:wrap;gap:14px; }.persona-profile-path { flex:1 0 100%; }.persona-state-heading input { max-width:55%; }.persona-state-domain { flex-wrap:wrap;gap:8px;padding:7px 0; }.persona-state-domain>strong { min-width:0;flex:1; }.persona-state-sources { order:4;flex:1 0 100%; }}
 </style>
 <script>
 (() => {
     if (window.archiveboxPersonaStateInstalled) return;
     window.archiveboxPersonaStateInstalled = true;
-    document.addEventListener('change', async event => {
-        if (!event.target.matches('[data-state-file]')) return;
-        const file = event.target.files[0];
-        if (file) event.target.closest('.persona-state-card').querySelector('[data-state-payload]').value = await file.text();
+    const filter = state => {
+        const query = state.querySelector('[data-state-filter]').value.trim().toLowerCase();
+        const rows = [...state.querySelectorAll('[data-state-domain]')];
+        rows.forEach(row => row.hidden = !row.dataset.stateDomain.includes(query));
+        const empty = state.querySelector('[data-state-empty]');
+        empty.hidden = rows.some(row => !row.hidden);
+        empty.textContent = query ? 'No matching sites' : 'No saved sites';
+    };
+    const render = (state, summary) => {
+        state.querySelector('[data-state-total]').textContent = summary.site_count;
+        state.querySelector('[data-state-sites]').textContent = `${summary.inventory_complete ? '' : 'known '}${summary.site_count === 1 ? 'site' : 'sites'}`;
+        const units=['bytes','KiB','MiB','GiB','TiB'];const unit=Math.min(4,Math.max(0,Math.floor(Math.log2(summary.profile.size || 1)/10)));
+        state.querySelector('[data-profile-size]').textContent=`${(summary.profile.size / 1024 ** unit).toLocaleString(undefined,{maximumFractionDigits:1})} ${units[unit]}`;
+        state.querySelector('[data-profile-version]').textContent=summary.profile.version;
+        state.querySelector('[data-profile-updated]').textContent=summary.profile.updated ? new Date(summary.profile.updated).toLocaleString() : '—';
+        const list = state.querySelector('[data-state-domains]');list.replaceChildren();
+        summary.domains.forEach(item => {
+            const row=document.createElement('div');row.className='persona-state-domain';row.dataset.stateDomain=item.domain;
+            const name=document.createElement('strong');name.textContent=item.domain;row.append(name);
+            const count=document.createElement('span');count.className='persona-domain-count';count.textContent=`${item.count} ${item.count === 1 ? 'entry' : 'entries'}`;row.append(count);
+            const sources=document.createElement('div');sources.className='persona-state-sources';
+            item.sources.forEach(source=>{const badge=document.createElement('span');badge.textContent=`${source.name} · ${source.count}`;sources.append(badge);});row.append(sources);
+            if(state.dataset.stateEditable==='true'){const remove=document.createElement('button');remove.type='button';remove.dataset.stateRemove=item.domain;remove.textContent='×';remove.setAttribute('aria-label',`Remove ${item.domain}`);remove.title=`Remove ${item.domain}`;row.append(remove);}
+            list.append(row);
+        });
+        filter(state);
+    };
+    document.addEventListener('input',event=>{if(event.target.matches('[data-state-filter]'))filter(event.target.closest('.persona-browser-state'));});
+    document.addEventListener('change',async event=>{
+        if(!event.target.matches('[data-state-file]'))return;
+        const file=event.target.files[0];if(file)event.target.closest('.persona-browser-state').querySelector('[data-state-payload]').value=await file.text();
     });
-    document.addEventListener('click', async event => {
-        const button = event.target.closest('[data-state-action]');
-        if (!button) return;
-        const card = button.closest('.persona-state-card');
-        const state = card.closest('.persona-browser-state');
-        const message = card.querySelector('.persona-state-message');
-        const data = new FormData();
-        data.set('artifact', card.dataset.stateCard);
-        data.set('action', button.dataset.stateAction);
-        if (button.dataset.stateAction === 'merge') data.set('payload', card.querySelector('[data-state-payload]').value);
-        data.set('csrfmiddlewaretoken', state.closest('form').querySelector('[name=csrfmiddlewaretoken]').value);
-        button.disabled = true;
-        message.textContent = ''; message.dataset.error = 'false';
-        try {
-            const response = await fetch(state.dataset.stateUrl, {method:'POST', body:data, credentials:'same-origin'});
-            if (!response.headers.get('content-type')?.includes('application/json')) throw new Error('Unable to update browser state. Refresh and try again.');
-            const result = await response.json();
-            if (!response.ok) throw new Error(Object.values(result.errors).flat().map(error => error.message).join('\n'));
-            for (const summary of result.cards) {
-                const target = state.querySelector(`[data-state-card="${summary.key}"]`);
-                target.querySelector('[data-state-count]').textContent = summary.count;
-                target.querySelector('[data-state-detail]').textContent = summary.detail;
-                const domains = target.querySelector('[data-state-domains]'); domains.replaceChildren();
-                summary.domains.forEach(domain => { const badge=document.createElement('span');badge.textContent=domain;domains.append(badge); });
-                target.querySelector('[data-state-updated]').textContent = summary.updated ? `Updated ${new Date(summary.updated).toLocaleString()}` : 'No saved state';
-            }
-            card.querySelector('[data-state-payload]').value = '';
-            card.querySelector('[data-state-file]').value = '';
-            message.textContent = button.dataset.stateAction === 'clear' ? 'Cleared.' : 'Saved.';
-        } catch (error) { message.dataset.error = 'true'; message.textContent = error.message; }
-        finally { button.disabled = false; }
+    document.addEventListener('click',async event=>{
+        const add=event.target.closest('[data-state-add]');
+        if(add){const panel=add.closest('.persona-browser-state').querySelector('.persona-state-import');panel.open=!panel.open;add.setAttribute('aria-expanded',String(panel.open));if(panel.open)panel.querySelector('textarea').focus();return;}
+        const button=event.target.closest('[data-state-action],[data-state-remove]');if(!button)return;
+        const state=button.closest('.persona-browser-state');const message=state.querySelector('[data-state-status]');const data=new FormData();
+        if(button.dataset.stateRemove){data.set('action','remove-domain');data.set('domain',button.dataset.stateRemove);}
+        else{data.set('artifact','auto');data.set('action','merge');data.set('payload',state.querySelector('[data-state-payload]').value);}
+        data.set('csrfmiddlewaretoken',state.closest('form').querySelector('[name=csrfmiddlewaretoken]').value);
+        button.disabled=true;message.textContent='';message.dataset.error='false';
+        try{
+            const response=await fetch(state.dataset.stateUrl,{method:'POST',body:data,credentials:'same-origin'});
+            if(!response.headers.get('content-type')?.includes('application/json'))throw new Error('Unable to update browser state. Refresh and try again.');
+            const result=await response.json();if(!response.ok)throw new Error(Object.values(result.errors).flat().map(error=>error.message).join('\n'));
+            render(state,result.state);
+            if(!button.dataset.stateRemove){state.querySelector('[data-state-payload]').value='';state.querySelector('[data-state-file]').value='';state.querySelector('.persona-state-import').open=false;state.querySelector('[data-state-add]').setAttribute('aria-expanded','false');}
+            message.textContent=button.dataset.stateRemove?'Site removed.':result.profile_synced===false?'Saved. Chrome sync unavailable.':'Saved.';
+        }catch(error){message.dataset.error='true';message.textContent=error.message;}
+        finally{button.disabled=false;}
     });
+    document.addEventListener('DOMContentLoaded',()=>document.querySelectorAll('.persona-browser-state[data-state-profile="true"]').forEach(async state=>{
+        const message=state.querySelector('[data-state-status]');const total=state.querySelector('[data-state-total]');const known=total.textContent;
+        const buttons=[...state.querySelectorAll('button')];buttons.forEach(button=>button.disabled=true);
+        total.textContent='…';message.textContent='Loading browser sites…';
+        const data=new FormData();data.set('action','inspect-domains');data.set('csrfmiddlewaretoken',state.closest('form').querySelector('[name=csrfmiddlewaretoken]').value);
+        try{
+            const response=await fetch(state.dataset.stateUrl,{method:'POST',body:data,credentials:'same-origin'});
+            if(!response.ok)throw new Error();const result=await response.json();render(state,result.state);message.textContent='';
+        }catch(error){total.textContent=known;state.querySelector('[data-state-sites]').textContent='known sites';message.textContent='Browser sites unavailable';}
+        finally{buttons.forEach(button=>button.disabled=false);}
+    }));
 })();
 </script>
