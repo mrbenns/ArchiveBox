@@ -152,19 +152,6 @@ def test_persona_browser_state_controls_in_real_browser(initialized_archive, bro
     )
     upload = root / "more-cookies.txt"
     upload.write_text(incoming_cookies)
-    diagnostic = run_archivebox_cmd(
-        [
-            "manage",
-            "shell",
-            "-c",
-            "import json; from archivebox.personas.models import Persona; from archivebox.config.common import get_config; from archivebox.plugins.discovery import get_plugin_catalog; c=get_config(persona=Persona.objects.get(name='Browser State')).model_dump(mode='json'); print(json.dumps({k:c.get(k) for k in ['CHROME_ARGS','CHROME_ARGS_EXTRA','CHROME_BINARY','CHROME_USER_DATA_DIR','CHROME_PROFILE_DIRECTORY','ABXPKG_LIB_DIR','NODE_BINARY','NODE_MODULES_DIR']})); print(get_plugin_catalog().find_command('browser-profile').path)",
-        ],
-        cwd=root,
-        env=env,
-    )
-    Path("/Users/squash/Local/Code/archiveboxes/workspace-artifacts/persona-indexeddb-repro/config.txt").write_text(
-        diagnostic.stdout + diagnostic.stderr,
-    )
     server = start_archivebox_server(root, port=port, env=env, log_name="browser-state-server.log")
     try:
         with sync_playwright() as playwright:
@@ -382,7 +369,11 @@ def test_auth_merge_preserves_omitted_storage_and_encoded_indexeddb_records(tmp_
     assert result["localStorage"]["https://example.com"] == {"keep": "old", "replace": "new"}
     assert result["sessionStorage"]["https://example.com"] == {"keep": "session"}
     origin = result["origins"][0]
-    assert origin["localStorage"] == [{"name": "keep", "value": "old"}, {"name": "add", "value": "new"}]
+    assert origin["localStorage"] == [
+        {"name": "keep", "value": "old"},
+        {"name": "replace", "value": "new"},
+        {"name": "add", "value": "new"},
+    ]
     assert origin["sessionStorage"] == [{"name": "session", "value": "old"}]
     assert origin["indexedDB"][0] == dexie
     assert "data" not in origin["indexedDB"][1]

@@ -925,7 +925,17 @@ def _merge_auth_storage(existing_file: Path, new_file: Path) -> None:
     for origin, payload in (new_payload.get("sessionStorage") or {}).items():
         existing_session[origin] = {**existing_session.get(origin, {}), **payload}
 
-    origins = _merge_origin_entries(existing_payload.get("origins", []), new_payload.get("origins", []), "origin")
+    origins = existing_payload.get("origins", [])
+    known_origins = {entry["origin"] for entry in [*origins, *new_payload.get("origins", [])]}
+    for kind in ("localStorage", "sessionStorage"):
+        for origin, values in (new_payload.get(kind) or {}).items():
+            if origin in known_origins:
+                origins = _merge_origin_entries(
+                    origins,
+                    [{"origin": origin, kind: [{"name": name, "value": value} for name, value in values.items()]}],
+                    "origin",
+                )
+    origins = _merge_origin_entries(origins, new_payload.get("origins", []), "origin")
     tabs = _merge_origin_entries(existing_payload.get("tabs", []), new_payload.get("tabs", []), "url")
 
     cookies = _merge_cookie_dicts(existing_payload.get("cookies") or [], new_payload.get("cookies") or [])
