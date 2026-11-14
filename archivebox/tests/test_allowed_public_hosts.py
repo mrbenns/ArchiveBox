@@ -171,6 +171,8 @@ def test_public_alias_previews_render_in_real_browser(snapshot, admin_user, live
             response = page.goto(f"http://{alias}:{port}{snapshot.get_absolute_url()}/index.html")
             assert response.status == 200
             main = page.frame_locator("#main-frame")
+            if mode == "safe-subdomains-fullreplay":
+                main = main.frame_locator("#document")
             main.get_by_text("ArchiveBox consolelog preview fixture", exact=False).wait_for()
             assert main.get_by_text("ArchiveBox consolelog preview fixture", exact=False).is_visible()
             page.screenshot(path=str(tmp_path / f"{mode}-{alias}.png"))

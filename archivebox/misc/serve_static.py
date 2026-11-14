@@ -1135,10 +1135,16 @@ def serve_static_with_byterange_support(request, path, document_root=None, show_
         except (OSError, RuntimeError, ValueError):
             pass
 
-    if request.GET.get("preview") and not thumbnail and not request.GET.get("raw") and content_type.startswith("text/html"):
+    if (
+        request.GET.get("preview")
+        and not thumbnail
+        and not request.GET.get("raw")
+        and content_type.startswith("text/html")
+        and not config.SHOULD_NEUTER_RISKY_REPLAY
+    ):
         document_query = request.GET.copy()
         document_query.pop("preview", None)
-        document_url = request.path
+        document_url = quote(request.path, safe="/")
         if document_query:
             document_url = f"{document_url}?{document_query.urlencode()}"
         response = HttpResponse(

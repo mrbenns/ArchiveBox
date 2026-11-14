@@ -196,7 +196,7 @@ def test_wget_literal_percent_output_url_serves_captured_file(initialized_archiv
         assert expected_path in link.get_attribute("href")
         frame = page.locator("#main-frame")
         assert expected_path in frame.get_attribute("src")
-        preview = page.frame_locator("#main-frame")
+        preview = page.frame_locator("#main-frame").frame_locator("#document")
         # Setting the iframe src does not mean its document has finished loading.
         expect(preview.locator("body")).to_contain_text("External link")
         expect(preview.locator("body")).to_contain_text("Continue to external page")
@@ -204,7 +204,7 @@ def test_wget_literal_percent_output_url_serves_captured_file(initialized_archiv
         page.reload(wait_until="domcontentloaded")
         frame = page.locator("#main-frame")
         assert expected_path in frame.get_attribute("src")
-        preview = page.frame_locator("#main-frame")
+        preview = page.frame_locator("#main-frame").frame_locator("#document")
         expect(preview.locator("body")).to_contain_text("External link")
         expect(preview.locator("body")).to_contain_text("Continue to external page")
         browser.close()

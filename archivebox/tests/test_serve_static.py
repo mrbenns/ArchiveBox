@@ -108,7 +108,7 @@ def test_dynamic_resource_alias_renders_in_full_replay(snapshot, live_server, br
                 f"http://web.archivebox.localhost:{port}{snapshot.get_absolute_url()}/index.html#wget/index.html",
                 wait_until="domcontentloaded",
             )
-            full = page.frame_locator("#main-frame")
+            full = page.frame_locator("#main-frame").frame_locator("#document")
             full.get_by_text("Captured chapter loaded from the archive", exact=True).wait_for()
             # Cards intentionally disable scripts; the saved static preview
             # remains readable without granting scripts access to the UI.

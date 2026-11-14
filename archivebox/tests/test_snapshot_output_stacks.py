@@ -1348,7 +1348,7 @@ def test_refreshed_output_replaces_warm_replay_without_disabling_cache(snapshot,
         try:
             page = browser.new_page()
             page.goto(target, wait_until="domcontentloaded")
-            frame = page.frame_locator("#main-frame")
+            frame = page.frame_locator("#main-frame").frame_locator("#document")
             assert frame.locator("h1").inner_text() == "ArchiveBox consolelog preview fixture"
             first_src = page.locator("#main-frame").get_attribute("src")
             assert first_src
@@ -1377,7 +1377,7 @@ def test_refreshed_output_replaces_warm_replay_without_disabling_cache(snapshot,
             if selection:
                 assert parse_qs(urlsplit(refreshed_src).query)["reader"] == ["1"]
                 assert urlsplit(refreshed_src).fragment == "section"
-            raw = page.request.get(refreshed_src)
+            raw = page.request.get(frame.locator("html").evaluate("() => location.href"))
             assert raw.status == 200
             assert "immutable" in raw.headers["cache-control"]
             assert b"refreshed preview fixture" in raw.body()
